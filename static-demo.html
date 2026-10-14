@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanPilot AI — Lending Operations Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-950:#0B1220; --ink-900:#101A2E; --ink-800:#16223B; --ink-700:#1E2C4A;
+    --indigo-700:#3730A3; --indigo-600:#4338CA; --indigo-500:#4F46E5; --indigo-400:#6366F1;
+    --sky-400:#38BDF8; --sky-500:#0EA5E9;
+    --slate-50:#F8FAFC; --slate-100:#F1F5F9; --slate-200:#E2E8F0; --slate-300:#CBD5E1;
+    --slate-400:#94A3B8; --slate-500:#64748B; --slate-600:#475569; --slate-700:#334155;
+    --green-500:#10B981; --amber-500:#F59E0B; --red-500:#EF4444;
+    --bg:var(--slate-50); --surface:#FFFFFF; --surface-2:var(--slate-100);
+    --text:var(--ink-900); --text-dim:var(--slate-500); --border:var(--slate-200);
+  }
+  [data-theme="dark"]{
+    --bg:var(--ink-950); --surface:var(--ink-900); --surface-2:var(--ink-800);
+    --text:#EEF2FF; --text-dim:#8B96B8; --border:var(--ink-700);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    transition:background .2s ease, color .2s ease;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;
+       border-radius:10px;padding:10px 18px;font-size:14px;cursor:pointer;transition:.15s ease;border:1px solid transparent;}
+  .btn-primary{background:var(--indigo-500);color:#fff;}
+  .btn-primary:hover{background:var(--indigo-600);}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--border);}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-sm{padding:6px 12px;font-size:13px;border-radius:8px;}
+  input,select,textarea{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:9px 12px; font-size:14px; color:var(--text); width:100%; outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--indigo-500); box-shadow:0 0 0 3px rgba(79,70,229,.15);}
+  input::placeholder{color:var(--text-dim);}
+  label{font-size:12.5px; font-weight:600; color:var(--text-dim); display:block; margin-bottom:6px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;}
+  .b-green{background:rgba(16,185,129,.12);color:#10B981;}
+  .b-amber{background:rgba(245,158,11,.12);color:#F59E0B;}
+  .b-red{background:rgba(239,68,68,.12);color:#EF4444;}
+  .b-indigo{background:rgba(79,70,229,.12);color:var(--indigo-400);}
+  .b-slate{background:var(--surface-2);color:var(--text-dim);}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:9px 14px;border-radius:10px;font-size:14px;font-weight:500;
+             color:var(--text-dim);cursor:pointer;transition:.15s;}
+  .nav-item:hover{background:var(--surface-2);color:var(--text);}
+  .nav-item.active{background:var(--indigo-500);color:#fff;}
+  .nav-item.active svg{stroke:#fff;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 37%,var(--surface-2) 63%);
+            background-size:400% 100%;animation:sk 1.4s ease infinite;border-radius:8px;}
+  @keyframes sk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+  .fade-in{animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .toast{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;
+         box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;gap:10px;align-items:flex-start;min-width:280px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--text-dim);font-weight:600;font-size:11.5px;letter-spacing:.02em;
+     padding:0 14px 10px;border-bottom:1px solid var(--border);}
+  td{padding:13px 14px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  tr.row-hover:hover{background:var(--surface-2);cursor:pointer;}
+  .scrollbar-none::-webkit-scrollbar{display:none;}
+  .modal-backdrop{background:rgba(8,10,20,.55);backdrop-filter:blur(2px);}
+  .kbd{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--surface-2);
+       border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text-dim);}
+  .progress-bg{background:var(--surface-2);border-radius:999px;overflow:hidden;height:8px;}
+  .progress-bar{height:100%;border-radius:999px;}
+  .tab-btn{padding:9px 4px;font-size:13.5px;font-weight:600;color:var(--text-dim);border-bottom:2px solid transparent;cursor:pointer;}
+  .tab-btn.active{color:var(--indigo-400);border-color:var(--indigo-500);}
+  .chip{border:1px solid var(--border);border-radius:9px;padding:7px 11px;font-size:13px;color:var(--text-dim);cursor:pointer;}
+  .chip.active{background:var(--indigo-500);color:#fff;border-color:var(--indigo-500);}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ============ TOASTS ============ -->
+<div id="toastHost" class="fixed top-5 right-5 z-[999] flex flex-col gap-2"></div>
+
+<!-- ============================================================ -->
+<!-- LANDING PAGE -->
+<!-- ============================================================ -->
+<div id="landing" class="fade-in">
+  <header class="sticky top-0 z-40" style="background:var(--bg);border-bottom:1px solid var(--border);">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#4F46E5"/><path d="M7 15.5L10.2 11L13 13.5L17 8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="display font-semibold text-[17px]">LoanPilot <span style="color:var(--indigo-500)">AI</span></span>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 text-sm" style="color:var(--text-dim)">
+        <a href="#features" class="hover:text-current">Features</a>
+        <a href="#workflow" class="hover:text-current">How it works</a>
+        <a href="#security" class="hover:text-current">Security</a>
+        <a href="#pricing" class="hover:text-current">Pricing</a>
+        <a href="#faq" class="hover:text-current">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <button onclick="themeToggle()" class="btn btn-ghost btn-sm" id="themeBtnLanding">🌙</button>
+        <button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Log in</button>
+        <button class="btn btn-primary btn-sm" onclick="showAuth('signup')">Start Free</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="max-w-7xl mx-auto px-6 pt-20 pb-16 grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <span class="badge b-indigo mb-5">Decision-support AI, not automated underwriting</span>
+      <h1 class="display text-[44px] md:text-[54px] leading-[1.08] font-semibold mb-6">AI-powered loan operations for modern businesses</h1>
+      <p class="text-lg mb-8" style="color:var(--text-dim);max-width:520px;">Automate applicant analysis, risk explanation and reporting — so your team spends time on judgment calls, not paperwork.</p>
+      <div class="flex flex-wrap gap-3 mb-10">
+        <button class="btn btn-primary" style="padding:13px 24px;font-size:15px" onclick="showAuth('signup')">Start Free →</button>
+        <button class="btn btn-ghost" style="padding:13px 24px;font-size:15px" onclick="enterApp()">Book a Demo</button>
+      </div>
+      <div class="flex items-center gap-6 text-sm" style="color:var(--text-dim)">
+        <span>✓ No card required</span><span>✓ Setup in minutes</span><span>✓ SOC2-ready architecture</span>
+      </div>
+    </div>
+    <div class="card p-5 shadow-2xl" style="transform:rotate(-1deg)">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-sm font-semibold">Application #LP-2291</span>
+        <span class="badge b-amber">Medium Risk</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="card p-3" style="border-color:transparent;background:var(--surface-2)"><div class="text-[11px]" style="color:var(--text-dim)">Eligibility Score</div><div class="text-2xl font-semibold mono" style="color:var(--indigo-500)">78<span class="text-sm">/100</span></div></div>
+        <div class="card p-3" style="border-color:transparent;background:var(--surface-2)"><div class="text-[11px]" style="color:var(--text-dim)">Requested</div><div class="text-2xl font-semibold mono">₹4.2L</div></div>
+      </div>
+      <div class="text-[11px] font-semibold mb-2" style="color:var(--text-dim)">AI EXPLANATION (SAMPLE)</div>
+      <p class="text-[13px] leading-relaxed mb-1" style="color:var(--text-dim)">Stable income-to-EMI ratio and 3-year employment tenure support approval. Credit score sits near the product's minimum threshold.</p>
+      <div class="h-24 mt-4"><canvas id="heroChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- TRUSTED BY -->
+  <section class="border-y py-8" style="border-color:var(--border)">
+    <div class="max-w-7xl mx-auto px-6">
+      <p class="text-center text-xs font-semibold mb-6" style="color:var(--text-dim)">BUILT FOR NBFCS, FINTECH LENDERS &amp; INDEPENDENT LOAN ADVISORS</p>
+      <div class="flex flex-wrap justify-center gap-x-14 gap-y-4 text-sm font-semibold" style="color:var(--text-dim)">
+        <span>Small NBFCs</span><span>Digital Lending Startups</span><span>Loan Aggregators</span><span>Financial Consultants</span><span>Microfinance Institutions</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="max-w-7xl mx-auto px-6 py-24">
+    <h2 class="display text-3xl font-semibold mb-3">Everything a lending desk needs, in one place</h2>
+    <p class="mb-12" style="color:var(--text-dim);max-width:560px">From intake to decision to reporting — one workspace replaces spreadsheets, email threads and manual scoring.</p>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="card p-6"><div class="text-2xl mb-3">📋</div><h3 class="font-semibold mb-2">Application workflow</h3><p class="text-sm" style="color:var(--text-dim)">Structured intake with document capture, status tracking and officer assignment.</p></div>
+      <div class="card p-6"><div class="text-2xl mb-3">🧠</div><h3 class="font-semibold mb-2">AI risk explanation</h3><p class="text-sm" style="color:var(--text-dim)">Plain-language reasoning behind every eligibility score and risk flag.</p></div>
+      <div class="card p-6"><div class="text-2xl mb-3">🗂️</div><h3 class="font-semibold mb-2">Document processing</h3><p class="text-sm" style="color:var(--text-dim)">Extract and validate income proof, bank statements and ID with confidence scoring.</p></div>
+      <div class="card p-6"><div class="text-2xl mb-3">🎯</div><h3 class="font-semibold mb-2">Product matching</h3><p class="text-sm" style="color:var(--text-dim)">Compare applicants against your own configured loan products automatically.</p></div>
+      <div class="card p-6"><div class="text-2xl mb-3">📊</div><h3 class="font-semibold mb-2">Portfolio analytics</h3><p class="text-sm" style="color:var(--text-dim)">Approval trends, officer performance and risk distribution at a glance.</p></div>
+      <div class="card p-6"><div class="text-2xl mb-3">🔒</div><h3 class="font-semibold mb-2">Multi-tenant &amp; secure</h3><p class="text-sm" style="color:var(--text-dim)">Isolated organization data with role-based access and full audit trails.</p></div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section id="workflow" class="py-24" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="display text-3xl font-semibold mb-12">How an application moves through LoanPilot</h2>
+      <div class="grid md:grid-cols-5 gap-4">
+        <div class="text-center"><div class="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3 font-semibold" style="background:var(--indigo-500);color:#fff">1</div><h4 class="font-semibold text-sm mb-1">Submit</h4><p class="text-xs" style="color:var(--text-dim)">Applicant &amp; document intake</p></div>
+        <div class="text-center"><div class="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3 font-semibold" style="background:var(--indigo-500);color:#fff">2</div><h4 class="font-semibold text-sm mb-1">Extract</h4><p class="text-xs" style="color:var(--text-dim)">AI reads uploaded documents</p></div>
+        <div class="text-center"><div class="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3 font-semibold" style="background:var(--indigo-500);color:#fff">3</div><h4 class="font-semibold text-sm mb-1">Analyze</h4><p class="text-xs" style="color:var(--text-dim)">Eligibility &amp; risk scoring</p></div>
+        <div class="text-center"><div class="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3 font-semibold" style="background:var(--indigo-500);color:#fff">4</div><h4 class="font-semibold text-sm mb-1">Match</h4><p class="text-xs" style="color:var(--text-dim)">Compare against loan products</p></div>
+        <div class="text-center"><div class="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3 font-semibold" style="background:var(--indigo-500);color:#fff">5</div><h4 class="font-semibold text-sm mb-1">Decide</h4><p class="text-xs" style="color:var(--text-dim)">Officer reviews &amp; reports</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section id="security" class="max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-12 items-center">
+    <div>
+      <h2 class="display text-3xl font-semibold mb-4">Built for regulated data from day one</h2>
+      <p class="mb-6" style="color:var(--text-dim)">Every organization's data is isolated at the database layer. Every sensitive action is logged. AI recommendations are always decision-support — never an automated approval.</p>
+      <ul class="space-y-3 text-sm">
+        <li class="flex gap-3"><span style="color:var(--indigo-500)">✓</span> Row-level security per organization</li>
+        <li class="flex gap-3"><span style="color:var(--indigo-500)">✓</span> Role-based permissions (Owner → Viewer)</li>
+        <li class="flex gap-3"><span style="color:var(--indigo-500)">✓</span> Full audit log of every sensitive action</li>
+        <li class="flex gap-3"><span style="color:var(--indigo-500)">✓</span> Encrypted document storage</li>
+      </ul>
+    </div>
+    <div class="card p-6"><canvas id="riskPreviewChart" height="220"></canvas></div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="py-24" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="display text-3xl font-semibold mb-12 text-center">Plans that scale with your loan book</h2>
+      <div class="grid md:grid-cols-4 gap-5">
+        <div class="card p-6"><h3 class="font-semibold mb-1">Starter</h3><div class="text-3xl font-semibold mb-4 mono">₹2,999<span class="text-sm font-normal" style="color:var(--text-dim)">/mo</span></div><ul class="text-sm space-y-2 mb-6" style="color:var(--text-dim)"><li>Up to 100 applications/mo</li><li>2 team seats</li><li>Core AI analysis</li></ul><button class="btn btn-ghost w-full" onclick="showAuth('signup')">Start Free</button></div>
+        <div class="card p-6 relative" style="border-color:var(--indigo-500);border-width:2px"><span class="badge b-indigo absolute -top-3 left-6">Most popular</span><h3 class="font-semibold mb-1">Business</h3><div class="text-3xl font-semibold mb-4 mono">₹7,999<span class="text-sm font-normal" style="color:var(--text-dim)">/mo</span></div><ul class="text-sm space-y-2 mb-6" style="color:var(--text-dim)"><li>Up to 750 applications/mo</li><li>10 team seats</li><li>Document AI + matching engine</li></ul><button class="btn btn-primary w-full" onclick="showAuth('signup')">Start Free</button></div>
+        <div class="card p-6"><h3 class="font-semibold mb-1">Professional</h3><div class="text-3xl font-semibold mb-4 mono">₹14,999<span class="text-sm font-normal" style="color:var(--text-dim)">/mo</span></div><ul class="text-sm space-y-2 mb-6" style="color:var(--text-dim)"><li>Unlimited applications</li><li>25 team seats</li><li>Full analytics &amp; API access</li></ul><button class="btn btn-ghost w-full" onclick="showAuth('signup')">Start Free</button></div>
+        <div class="card p-6"><h3 class="font-semibold mb-1">Enterprise</h3><div class="text-3xl font-semibold mb-4 mono">Custom</div><ul class="text-sm space-y-2 mb-6" style="color:var(--text-dim)"><li>Dedicated infrastructure</li><li>Custom SLAs</li><li>White-glove onboarding</li></ul><button class="btn btn-ghost w-full" onclick="showAuth('signup')">Contact Sales</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="max-w-3xl mx-auto px-6 py-24">
+    <h2 class="display text-3xl font-semibold mb-10 text-center">Frequently asked questions</h2>
+    <div class="space-y-3" id="faqList"></div>
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-5xl mx-auto px-6 pb-24 text-center">
+    <div class="card p-14" style="background:linear-gradient(135deg,var(--indigo-600),var(--indigo-400));border:none;color:#fff">
+      <h2 class="display text-3xl font-semibold mb-3">Ready to modernize your lending desk?</h2>
+      <p class="mb-7 opacity-90">Set up your organization in minutes. No card required for the free tier.</p>
+      <button class="btn" style="background:#fff;color:var(--indigo-600);padding:13px 26px;font-size:15px" onclick="showAuth('signup')">Start Free →</button>
+    </div>
+  </section>
+
+  <footer class="border-t py-10" style="border-color:var(--border)">
+    <div class="max-w-7xl mx-auto px-6 flex flex-wrap justify-between gap-6 text-sm" style="color:var(--text-dim)">
+      <span>© 2026 LoanPilot AI. Decision-support tooling — not a lender.</span>
+      <div class="flex gap-6"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a><a href="#">Contact</a></div>
+    </div>
+  </footer>
+</div>
+
+<!-- ============================================================ -->
+<!-- AUTH SCREENS -->
+<!-- ============================================================ -->
+<div id="authScreen" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:var(--bg)">
+  <button onclick="closeAuth()" class="absolute top-6 left-6 btn btn-ghost btn-sm">← Back</button>
+  <button onclick="themeToggle()" class="absolute top-6 right-6 btn btn-ghost btn-sm" id="themeBtnAuth">🌙</button>
+
+  <div class="w-full max-w-sm px-6">
+    <div class="flex items-center gap-2.5 justify-center mb-8">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#4F46E5"/><path d="M7 15.5L10.2 11L13 13.5L17 8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="display font-semibold text-[17px]">LoanPilot AI</span>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <h2 class="text-xl font-semibold mb-1 text-center">Welcome back</h2>
+      <p class="text-sm text-center mb-6" style="color:var(--text-dim)">Log in to your organization</p>
+      <div class="space-y-4">
+        <div><label>Work email</label><input type="email" placeholder="you@company.com" value="siri@rajlending.in"></div>
+        <div><label>Password</label><input type="password" placeholder="••••••••" value="demopassword"></div>
+        <div class="text-right"><a class="text-xs font-semibold" style="color:var(--indigo-500)" onclick="showAuth('forgot')">Forgot password?</a></div>
+        <button class="btn btn-primary w-full" style="padding:11px" onclick="enterApp()">Log in</button>
+      </div>
+      <p class="text-center text-sm mt-6" style="color:var(--text-dim)">No account? <a class="font-semibold" style="color:var(--indigo-500)" onclick="showAuth('signup')">Start free</a></p>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="signupForm" class="hidden">
+      <h2 class="text-xl font-semibold mb-1 text-center">Create your organization</h2>
+      <p class="text-sm text-center mb-6" style="color:var(--text-dim)">Free to start, no card required</p>
+      <div class="space-y-4">
+        <div><label>Business name</label><input placeholder="Rajguru Lending Pvt Ltd"></div>
+        <div><label>Work email</label><input type="email" placeholder="you@company.com"></div>
+        <div><label>Password</label><input type="password" placeholder="Minimum 8 characters"></div>
+        <button class="btn btn-primary w-full" style="padding:11px" onclick="showAuth('verify')">Create account</button>
+      </div>
+      <p class="text-center text-sm mt-6" style="color:var(--text-dim)">Already have an account? <a class="font-semibold" style="color:var(--indigo-500)" onclick="showAuth('login')">Log in</a></p>
+    </div>
+
+    <!-- FORGOT -->
+    <div id="forgotForm" class="hidden">
+      <h2 class="text-xl font-semibold mb-1 text-center">Reset your password</h2>
+      <p class="text-sm text-center mb-6" style="color:var(--text-dim)">We'll email you a reset link</p>
+      <div class="space-y-4">
+        <div><label>Work email</label><input type="email" placeholder="you@company.com"></div>
+        <button class="btn btn-primary w-full" style="padding:11px" onclick="toast('Reset link sent (demo)','success'); showAuth('login')">Send reset link</button>
+      </div>
+      <p class="text-center text-sm mt-6"><a class="font-semibold" style="color:var(--indigo-500)" onclick="showAuth('login')">← Back to log in</a></p>
+    </div>
+
+    <!-- VERIFY -->
+    <div id="verifyForm" class="hidden text-center">
+      <div class="text-4xl mb-4">📩</div>
+      <h2 class="text-xl font-semibold mb-2">Verify your email</h2>
+      <p class="text-sm mb-6" style="color:var(--text-dim)">We sent a verification link to your inbox. This is a demo — click below to continue.</p>
+      <button class="btn btn-primary w-full" style="padding:11px" onclick="enterApp()">I've verified — Enter workspace</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APP SHELL -->
+<!-- ============================================================ -->
+<div id="app" class="hidden fixed inset-0">
+  <div class="flex h-full">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 flex-shrink-0 flex flex-col scrollbar-none overflow-y-auto" style="background:var(--surface);border-right:1px solid var(--border)">
+      <div class="h-16 flex items-center gap-2.5 px-5 flex-shrink-0" style="border-bottom:1px solid var(--border)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#4F46E5"/><path d="M7 15.5L10.2 11L13 13.5L17 8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="display font-semibold text-[15px]">LoanPilot AI</span>
+      </div>
+      <div class="p-3 flex-1 space-y-0.5" id="sideNav">
+        <!-- injected by JS -->
+      </div>
+      <div class="p-3 flex-shrink-0" style="border-top:1px solid var(--border)">
+        <div class="card p-3 mb-3" style="background:var(--surface-2);border-color:transparent">
+          <div class="flex justify-between items-center mb-1.5"><span class="text-xs font-semibold">Business plan</span><span class="text-[11px]" style="color:var(--text-dim)">312/750</span></div>
+          <div class="progress-bg"><div class="progress-bar" style="width:42%;background:var(--indigo-500)"></div></div>
+        </div>
+        <div class="nav-item" onclick="exitApp()"><span>🚪</span> Log out</div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- TOPBAR -->
+      <header class="h-16 flex-shrink-0 flex items-center justify-between px-6 gap-4" style="border-bottom:1px solid var(--border);background:var(--bg)">
+        <div class="flex items-center gap-2 text-sm" style="color:var(--text-dim)" id="breadcrumb">
+          <span>Rajguru Lending</span><span>/</span><span id="crumbCurrent" style="color:var(--text)" class="font-medium">Dashboard</span>
+        </div>
+        <div class="flex-1 max-w-md relative hidden md:block">
+          <input placeholder="Search applicants, applications…  (⌘K)" onclick="openCommandPalette()" readonly class="cursor-pointer">
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <button onclick="themeToggle()" class="btn btn-ghost btn-sm" id="themeBtnApp">🌙</button>
+          <button class="btn btn-ghost btn-sm relative" onclick="toggleNotifPanel()">🔔<span class="absolute -top-1 -right-1 w-2 h-2 rounded-full" style="background:var(--red-500)"></span></button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAiPanel()">✨ Assistant</button>
+          <div class="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0" style="background:var(--indigo-500);color:#fff" onclick="toggleProfileMenu()">S</div>
+        </div>
+      </header>
+
+      <!-- SCROLL AREA -->
+      <main class="flex-1 overflow-y-auto p-6" id="mainScroll">
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view active fade-in">
+          <div class="flex items-center justify-between mb-6">
+            <div><h1 class="display text-2xl font-semibold">Dashboard</h1><p class="text-sm" style="color:var(--text-dim)">Sample data · Rajguru Lending Pvt Ltd</p></div>
+            <button class="btn btn-primary" onclick="go('applications');toast('New application draft created','success')">+ New Application</button>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="kpiGrid"></div>
+          <div class="grid lg:grid-cols-3 gap-5 mb-6">
+            <div class="card p-5 lg:col-span-2"><h3 class="font-semibold mb-4 text-sm">Applications over time</h3><canvas id="chartApplications" height="110"></canvas></div>
+            <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Risk distribution</h3><canvas id="chartRisk" height="110"></canvas></div>
+          </div>
+          <div class="grid lg:grid-cols-2 gap-5 mb-6">
+            <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Approval vs rejection</h3><canvas id="chartApproval" height="130"></canvas></div>
+            <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Loan amount distribution</h3><canvas id="chartAmount" height="130"></canvas></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex justify-between items-center mb-4"><h3 class="font-semibold text-sm">Recent applications</h3><a class="text-xs font-semibold" style="color:var(--indigo-500)" onclick="go('applications')">View all →</a></div>
+            <div class="overflow-x-auto"><table id="recentAppsTable"></table></div>
+          </div>
+        </section>
+
+        <!-- APPLICATIONS LIST -->
+        <section id="view-applications" class="view fade-in">
+          <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div><h1 class="display text-2xl font-semibold">Applications</h1><p class="text-sm" style="color:var(--text-dim)">All loan applications across your organization</p></div>
+            <button class="btn btn-primary" onclick="toast('New application draft created','success')">+ New Application</button>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4" id="statusChips"></div>
+          <div class="card p-4 mb-4 flex flex-wrap gap-3 items-center">
+            <input placeholder="Search by applicant name…" style="max-width:260px" oninput="renderApplicationsTable(this.value)">
+            <select style="max-width:170px"><option>Sort: Newest first</option><option>Sort: Highest amount</option><option>Sort: Highest risk</option></select>
+            <select style="max-width:170px"><option>Officer: All</option><option>Priya Sharma</option><option>Rahul Mehta</option><option>Ananya Rao</option></select>
+          </div>
+          <div class="card p-2 overflow-x-auto"><table id="applicationsTable"></table></div>
+          <div class="flex justify-between items-center mt-4 text-sm" style="color:var(--text-dim)">
+            <span>Showing 1–12 of 312</span>
+            <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Previous</button><button class="btn btn-ghost btn-sm">Next</button></div>
+          </div>
+        </section>
+
+        <!-- APPLICATION DETAIL -->
+        <section id="view-appdetail" class="view fade-in"></section>
+
+        <!-- LOAN PRODUCTS -->
+        <section id="view-products" class="view fade-in">
+          <div class="flex items-center justify-between mb-5">
+            <div><h1 class="display text-2xl font-semibold">Loan Products</h1><p class="text-sm" style="color:var(--text-dim)">Products configured for automatic matching</p></div>
+            <button class="btn btn-primary" onclick="openModal('newProductModal')">+ New Product</button>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4" id="productsGrid"></div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section id="view-analytics" class="view fade-in">
+          <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div><h1 class="display text-2xl font-semibold">Analytics</h1><p class="text-sm" style="color:var(--text-dim)">Portfolio performance over time</p></div>
+            <div class="flex gap-2" id="dateFilters"></div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="analyticsKpis"></div>
+          <div class="grid lg:grid-cols-2 gap-5 mb-5">
+            <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Monthly performance</h3><canvas id="chartMonthly" height="130"></canvas></div>
+            <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Officer performance</h3><canvas id="chartOfficer" height="130"></canvas></div>
+          </div>
+          <div class="card p-5"><h3 class="font-semibold mb-4 text-sm">Product performance</h3><canvas id="chartProduct" height="110"></canvas></div>
+        </section>
+
+        <!-- EMI CALCULATOR -->
+        <section id="view-emi" class="view fade-in">
+          <h1 class="display text-2xl font-semibold mb-1">EMI Calculator</h1>
+          <p class="text-sm mb-5" style="color:var(--text-dim)">Standalone calculator — also embedded in every application</p>
+          <div class="grid lg:grid-cols-3 gap-5">
+            <div class="card p-5">
+              <label>Loan amount (₹)</label><input type="number" id="emiAmount" value="500000" oninput="calcEmi()" class="mb-4">
+              <label>Interest rate (% p.a.)</label><input type="number" id="emiRate" value="11.5" step="0.1" oninput="calcEmi()" class="mb-4">
+              <label>Tenure (months)</label><input type="number" id="emiTenure" value="36" oninput="calcEmi()">
+            </div>
+            <div class="card p-5 lg:col-span-2">
+              <div class="grid grid-cols-3 gap-4 mb-5">
+                <div><div class="text-xs" style="color:var(--text-dim)">Monthly EMI</div><div class="text-xl font-semibold mono" id="emiOut">₹0</div></div>
+                <div><div class="text-xs" style="color:var(--text-dim)">Total Interest</div><div class="text-xl font-semibold mono" id="emiInterestOut">₹0</div></div>
+                <div><div class="text-xs" style="color:var(--text-dim)">Total Payment</div><div class="text-xl font-semibold mono" id="emiTotalOut">₹0</div></div>
+              </div>
+              <div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">AMORTIZATION SCHEDULE (first 12 months)</div>
+              <div class="overflow-y-auto max-h-64"><table id="amortTable"></table></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- REPORTS -->
+        <section id="view-reports" class="view fade-in"></section>
+
+        <!-- TEAM -->
+        <section id="view-team" class="view fade-in">
+          <div class="flex items-center justify-between mb-5">
+            <div><h1 class="display text-2xl font-semibold">Team</h1><p class="text-sm" style="color:var(--text-dim)">Manage members, roles and access</p></div>
+            <button class="btn btn-primary" onclick="toast('Invite sent (demo)','success')">+ Invite member</button>
+          </div>
+          <div class="card p-2 overflow-x-auto"><table id="teamTable"></table></div>
+        </section>
+
+        <!-- AUDIT LOG -->
+        <section id="view-audit" class="view fade-in">
+          <h1 class="display text-2xl font-semibold mb-1">Audit Log</h1>
+          <p class="text-sm mb-5" style="color:var(--text-dim)">Every sensitive action, tracked</p>
+          <div class="card p-2 overflow-x-auto"><table id="auditTable"></table></div>
+        </section>
+
+        <!-- BILLING -->
+        <section id="view-billing" class="view fade-in">
+          <h1 class="display text-2xl font-semibold mb-1">Billing</h1>
+          <p class="text-sm mb-5" style="color:var(--text-dim)">Payments are not connected in this demo — structured for Stripe</p>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="card p-5"><div class="text-xs mb-1" style="color:var(--text-dim)">Current plan</div><div class="text-xl font-semibold mb-3">Business</div><span class="badge b-green">Active</span></div>
+            <div class="card p-5"><div class="text-xs mb-1" style="color:var(--text-dim)">Applications this cycle</div><div class="text-xl font-semibold mono mb-3">312 / 750</div><div class="progress-bg"><div class="progress-bar" style="width:42%;background:var(--indigo-500)"></div></div></div>
+            <div class="card p-5"><div class="text-xs mb-1" style="color:var(--text-dim)">Next invoice</div><div class="text-xl font-semibold mono mb-3">₹7,999</div><div class="text-xs" style="color:var(--text-dim)">Due 1 Nov 2026</div></div>
+          </div>
+          <div class="card p-5 mb-6">
+            <h3 class="font-semibold text-sm mb-4">Compare plans</h3>
+            <div class="grid md:grid-cols-4 gap-4" id="billingPlans"></div>
+          </div>
+          <div class="card p-5"><h3 class="font-semibold text-sm mb-4">Billing history</h3><div class="overflow-x-auto"><table id="billingTable"></table></div></div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="view-settings" class="view fade-in">
+          <h1 class="display text-2xl font-semibold mb-5">Settings</h1>
+          <div class="flex gap-6 mb-6 flex-wrap" id="settingsTabs"></div>
+          <div id="settingsContent" class="card p-6 max-w-2xl"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- AI ASSISTANT PANEL -->
+    <aside id="aiPanel" class="w-96 flex-shrink-0 flex-col hidden" style="background:var(--surface);border-left:1px solid var(--border)">
+      <div class="h-16 flex items-center justify-between px-5 flex-shrink-0" style="border-bottom:1px solid var(--border)">
+        <span class="font-semibold text-sm">✨ AI Financial Assistant</span>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAiPanel()">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-3" id="aiMessages"></div>
+      <div class="p-3 flex-shrink-0" style="border-top:1px solid var(--border)">
+        <div class="flex flex-wrap gap-1.5 mb-2">
+          <span class="chip" style="font-size:11px;padding:4px 8px" onclick="askAi('Why is this application high risk?')">Why high risk?</span>
+          <span class="chip" style="font-size:11px;padding:4px 8px" onclick="askAi('Which products match this applicant?')">Matching products</span>
+          <span class="chip" style="font-size:11px;padding:4px 8px" onclick="askAi('What documents are missing?')">Missing docs</span>
+        </div>
+        <div class="flex gap-2">
+          <input id="aiInput" placeholder="Ask about a policy, product or applicant…" onkeydown="if(event.key==='Enter')askAi()">
+          <button class="btn btn-primary btn-sm" onclick="askAi()">→</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- NOTIFICATIONS PANEL -->
+  <div id="notifPanel" class="hidden fixed top-16 right-24 w-80 z-40 card p-3 shadow-2xl"></div>
+  <!-- PROFILE MENU -->
+  <div id="profileMenu" class="hidden fixed top-16 right-6 w-56 z-40 card p-2 shadow-2xl"></div>
+
+  <!-- COMMAND PALETTE -->
+  <div id="commandPalette" class="hidden fixed inset-0 z-50 modal-backdrop items-start justify-center pt-28" onclick="if(event.target===this)closeCommandPalette()">
+    <div class="card w-full max-w-xl shadow-2xl overflow-hidden">
+      <input id="cmdInput" placeholder="Search applicants, applications, settings…" class="border-0 rounded-none" style="padding:16px" autofocus>
+      <div class="border-t" style="border-color:var(--border)">
+        <div class="nav-item" style="border-radius:0;padding:12px 18px" onclick="go('dashboard');closeCommandPalette()">📊 Go to Dashboard</div>
+        <div class="nav-item" style="border-radius:0;padding:12px 18px" onclick="go('applications');closeCommandPalette()">📋 Go to Applications</div>
+        <div class="nav-item" style="border-radius:0;padding:12px 18px" onclick="openApplication(0);closeCommandPalette()">👤 Ramesh Kulkarni — Application #LP-2291</div>
+        <div class="nav-item" style="border-radius:0;padding:12px 18px" onclick="go('emi');closeCommandPalette()">🧮 Open EMI Calculator</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW PRODUCT MODAL -->
+  <div id="newProductModal" class="hidden fixed inset-0 z-50 modal-backdrop items-center justify-center" onclick="if(event.target===this)closeModal('newProductModal')">
+    <div class="card w-full max-w-lg shadow-2xl p-6">
+      <h3 class="font-semibold mb-4">New Loan Product</h3>
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div><label>Product name</label><input placeholder="Personal Loan Plus"></div>
+        <div><label>Interest rate (%)</label><input type="number" placeholder="11.5"></div>
+        <div><label>Min. credit score</label><input type="number" placeholder="650"></div>
+        <div><label>Min. monthly income (₹)</label><input type="number" placeholder="25000"></div>
+        <div><label>Max. loan amount (₹)</label><input type="number" placeholder="1000000"></div>
+        <div><label>Max. tenure (months)</label><input type="number" placeholder="60"></div>
+      </div>
+      <div class="flex gap-3 justify-end"><button class="btn btn-ghost" onclick="closeModal('newProductModal')">Cancel</button><button class="btn btn-primary" onclick="closeModal('newProductModal');toast('Loan product created','success')">Create product</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DEMO DATA  (clearly synthetic — labeled throughout the UI)
+   ============================================================ */
+const OFFICERS = ["Priya Sharma","Rahul Mehta","Ananya Rao","Karan Joshi"];
+const NAMES = ["Ramesh Kulkarni","Sneha Patil","Vikram Deshmukh","Anjali Joshi","Suresh Naik","Pooja Gaikwad","Amit Shinde","Kavita Pawar","Rohan Bhosale","Meera Kale","Sandeep Pandit","Nikita Jadhav"];
+const STATUSES = ["Draft","Submitted","Under Review","AI Analysis","Approved","Rejected","Needs Documents"];
+const STATUS_COLOR = {Draft:"b-slate",Submitted:"b-indigo","Under Review":"b-amber","AI Analysis":"b-indigo",Approved:"b-green",Rejected:"b-red","Needs Documents":"b-amber"};
+
+function seededApps(n){
+  let apps=[];
+  for(let i=0;i<n;i++){
+    const amt = 80000 + Math.floor(Math.random()*900000);
+    const score = 480+Math.floor(Math.random()*370);
+    const risk = score>700?"Low":score>590?"Medium":"High";
+    apps.push({
+      id:"LP-"+(2200+i),
+      name: NAMES[i%NAMES.length],
+      amount: amt,
+      credit: score,
+      risk: risk,
+      eligibility: Math.max(20, Math.min(96, Math.round((score-400)/6))),
+      status: STATUSES[i%STATUSES.length],
+      officer: OFFICERS[i%OFFICERS.length],
+      date: new Date(Date.now()-i*86400000*1.7).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}),
+      income: 22000+Math.floor(Math.random()*60000),
+      expenses: 8000+Math.floor(Math.random()*15000),
+      emi: Math.floor(Math.random()*8000),
+      dependents: Math.floor(Math.random()*4),
+      savings: Math.floor(Math.random()*300000),
+      tenure: [12,24,36,48,60][i%5],
+      employment: ["Salaried","Self-Employed","Business Owner"][i%3],
+      years: 1+Math.floor(Math.random()*10),
+    });
+  }
+  return apps;
+}
+const APPLICATIONS = seededApps(24);
+
+const PRODUCTS = [
+  {name:"Personal Loan Standard", rate:11.5, minCredit:650, minIncome:25000, maxAmount:1000000, maxTenure:60, active:34},
+  {name:"MSME Business Loan", rate:13.2, minCredit:600, minIncome:40000, maxAmount:2500000, maxTenure:84, active:19},
+  {name:"Quick Cash Advance", rate:16.0, minCredit:550, minIncome:18000, maxAmount:300000, maxTenure:24, active:41},
+];
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function themeToggle(){
+  const html=document.body;
+  const next = html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme', next);
+  const icon = next==='dark'?'☀️':'🌙';
+  ['themeBtnLanding','themeBtnAuth','themeBtnApp'].forEach(id=>{const el=document.getElementById(id); if(el) el.textContent=icon;});
+  Object.values(charts).forEach(c=>c && c.update());
+}
+
+/* ============================================================
+   NAV / ROUTING
+   ============================================================ */
+function showAuth(which){
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('authScreen').classList.add('flex');
+  ['loginForm','signupForm','forgotForm','verifyForm'].forEach(f=>document.getElementById(f).classList.add('hidden'));
+  document.getElementById(which+'Form').classList.remove('hidden');
+}
+function closeAuth(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('flex');
+  document.getElementById('landing').classList.remove('hidden');
+}
+function enterApp(){
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('flex');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('app').classList.add('flex');
+  buildSideNav();
+  renderAll();
+  toast('Welcome back, Siri 👋','success');
+}
+function exitApp(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('app').classList.remove('flex');
+  document.getElementById('landing').classList.remove('hidden');
+}
+
+const NAV_ITEMS = [
+  {id:'dashboard', label:'Dashboard', icon:'📊'},
+  {id:'applications', label:'Applications', icon:'📋'},
+  {id:'products', label:'Loan Products', icon:'🎯'},
+  {id:'analytics', label:'Analytics', icon:'📈'},
+  {id:'emi', label:'EMI Calculator', icon:'🧮'},
+  {id:'reports', label:'Reports', icon:'📄'},
+  {id:'team', label:'Team', icon:'👥'},
+  {id:'audit', label:'Audit Log', icon:'🕓'},
+  {id:'billing', label:'Billing', icon:'💳'},
+  {id:'settings', label:'Settings', icon:'⚙️'},
+];
+function buildSideNav(){
+  const el = document.getElementById('sideNav');
+  el.innerHTML = NAV_ITEMS.map(n=>`<div class="nav-item" id="nav-${n.id}" onclick="go('${n.id}')"><span>${n.icon}</span> ${n.label}</div>`).join('');
+}
+let currentView='dashboard';
+function go(id){
+  currentView=id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  document.querySelectorAll('#sideNav .nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl = document.getElementById('nav-'+id); if(navEl) navEl.classList.add('active');
+  const label = (NAV_ITEMS.find(n=>n.id===id)||{}).label || 'Application';
+  document.getElementById('crumbCurrent').textContent = label;
+  document.getElementById('mainScroll').scrollTop = 0;
+  closeAllOverlays();
+}
+function closeAllOverlays(){
+  document.getElementById('notifPanel').classList.add('hidden');
+  document.getElementById('profileMenu').classList.add('hidden');
+}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function toast(msg, type='default'){
+  const colors={success:'#10B981',error:'#EF4444',default:'var(--indigo-500)'};
+  const host=document.getElementById('toastHost');
+  const t=document.createElement('div');
+  t.className='toast fade-in';
+  t.innerHTML=`<div style="width:6px;border-radius:3px;background:${colors[type]||colors.default};align-self:stretch"></div><div class="text-sm">${msg}</div>`;
+  host.appendChild(t);
+  setTimeout(()=>{t.style.opacity=0; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300);},3200);
+}
+
+/* ============================================================
+   MODALS / OVERLAYS
+   ============================================================ */
+function openModal(id){document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex');}
+function closeModal(id){document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex');}
+function openCommandPalette(){document.getElementById('commandPalette').classList.remove('hidden'); document.getElementById('commandPalette').classList.add('flex'); setTimeout(()=>document.getElementById('cmdInput').focus(),50);}
+function closeCommandPalette(){document.getElementById('commandPalette').classList.add('hidden'); document.getElementById('commandPalette').classList.remove('flex');}
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openCommandPalette(); }
+  if(e.key==='Escape'){ closeCommandPalette(); closeAllOverlays(); }
+});
+function toggleNotifPanel(){
+  const p=document.getElementById('notifPanel');
+  if(p.classList.contains('hidden')){
+    p.innerHTML = `<div class="text-sm font-semibold px-2 py-1.5">Notifications</div>` + [
+      ["🟢","Application LP-2298 approved by Priya Sharma","2m ago"],
+      ["🟡","LP-2287 flagged as high risk by AI analysis","1h ago"],
+      ["📄","Document uploaded for LP-2291","3h ago"],
+      ["👥","Rahul Mehta joined as Loan Officer","1d ago"],
+    ].map(n=>`<div class="px-2 py-2 rounded-lg hover:bg-[var(--surface-2)] flex gap-2 text-sm"><span>${n[0]}</span><div class="flex-1">${n[1]}<div class="text-[11px]" style="color:var(--text-dim)">${n[2]}</div></div></div>`).join('');
+    p.classList.remove('hidden');
+  } else p.classList.add('hidden');
+}
+function toggleProfileMenu(){
+  const p=document.getElementById('profileMenu');
+  if(p.classList.contains('hidden')){
+    p.innerHTML = `
+      <div class="px-3 py-2 text-sm"><div class="font-semibold">Siri</div><div class="text-xs" style="color:var(--text-dim)">Owner · Rajguru Lending</div></div>
+      <div class="nav-item" onclick="go('settings')">⚙️ Account settings</div>
+      <div class="nav-item" onclick="go('billing')">💳 Billing</div>
+      <div class="nav-item" onclick="exitApp()">🚪 Log out</div>`;
+    p.classList.remove('hidden');
+  } else p.classList.add('hidden');
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+let charts={};
+function gridColor(){ return getComputedStyle(document.body).getPropertyValue('--border').trim(); }
+function textColor(){ return getComputedStyle(document.body).getPropertyValue('--text-dim').trim(); }
+function baseOpts(extra={}){
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false, labels:{color:textColor()}}},
+    scales:{
+      x:{grid:{color:gridColor()}, ticks:{color:textColor(), font:{size:11}}},
+      y:{grid:{color:gridColor()}, ticks:{color:textColor(), font:{size:11}}}
+    }
+  }, extra);
+}
+function mkChart(id,cfg){
+  const ctx=document.getElementById(id); if(!ctx) return null;
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(ctx,cfg);
+  return charts[id];
+}
+function buildCharts(){
+  const months=['Apr','May','Jun','Jul','Aug','Sep'];
+  mkChart('chartApplications',{type:'line',data:{labels:months,datasets:[{data:[38,52,49,63,71,68],borderColor:'#4F46E5',backgroundColor:'rgba(79,70,229,.12)',fill:true,tension:.4,pointRadius:0}]},options:baseOpts()});
+  mkChart('chartRisk',{type:'doughnut',data:{labels:['Low','Medium','High'],datasets:[{data:[52,31,17],backgroundColor:['#10B981','#F59E0B','#EF4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:textColor(),boxWidth:10,font:{size:11}}}}}});
+  mkChart('chartApproval',{type:'bar',data:{labels:months,datasets:[{label:'Approved',data:[24,31,29,38,44,41],backgroundColor:'#10B981',borderRadius:5},{label:'Rejected',data:[8,11,9,12,10,13],backgroundColor:'#EF4444',borderRadius:5}]},options:baseOpts({plugins:{legend:{display:true,position:'bottom',labels:{color:textColor(),boxWidth:10,font:{size:11}}}}})});
+  mkChart('chartAmount',{type:'bar',data:{labels:['0-1L','1-3L','3-5L','5-10L','10L+'],datasets:[{data:[18,44,39,22,9],backgroundColor:'#6366F1',borderRadius:5}]},options:baseOpts()});
+  mkChart('heroChart',{type:'line',data:{labels:['1','2','3','4','5','6'],datasets:[{data:[40,55,48,66,72,78],borderColor:'#4F46E5',backgroundColor:'rgba(79,70,229,.1)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+  mkChart('riskPreviewChart',{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Low',data:[20,24,22,28,30,32],backgroundColor:'#10B981',borderRadius:4},{label:'Medium',data:[10,12,11,9,13,12],backgroundColor:'#F59E0B',borderRadius:4},{label:'High',data:[4,5,3,6,4,5],backgroundColor:'#EF4444',borderRadius:4}]},options:baseOpts({plugins:{legend:{display:true,position:'bottom',labels:{color:textColor(),boxWidth:10,font:{size:11}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:textColor()}},y:{stacked:true,grid:{color:gridColor()},ticks:{color:textColor()}}}})});
+}
+function buildAnalyticsCharts(){
+  const months=['Apr','May','Jun','Jul','Aug','Sep'];
+  mkChart('chartMonthly',{type:'line',data:{labels:months,datasets:[{label:'Applications',data:[38,52,49,63,71,68],borderColor:'#4F46E5',tension:.4,pointRadius:0},{label:'Approvals',data:[24,31,29,38,44,41],borderColor:'#10B981',tension:.4,pointRadius:0}]},options:baseOpts({plugins:{legend:{display:true,position:'bottom',labels:{color:textColor(),boxWidth:10,font:{size:11}}}}})});
+  mkChart('chartOfficer',{type:'bar',data:{labels:OFFICERS,datasets:[{data:[78,65,91,54],backgroundColor:'#38BDF8',borderRadius:5}]},options:baseOpts({indexAxis:'y'})});
+  mkChart('chartProduct',{type:'bar',data:{labels:PRODUCTS.map(p=>p.name),datasets:[{data:PRODUCTS.map(p=>p.active),backgroundColor:'#4F46E5',borderRadius:5}]},options:baseOpts()});
+}
+
+/* ============================================================
+   RENDER: DASHBOARD KPIs + TABLES
+   ============================================================ */
+function kpiCard(label,value,delta,positive){
+  return `<div class="card p-4">
+    <div class="text-xs mb-2" style="color:var(--text-dim)">${label}</div>
+    <div class="text-2xl font-semibold mono">${value}</div>
+    <div class="text-xs mt-1" style="color:${positive?'#10B981':'#EF4444'}">${delta}</div>
+  </div>`;
+}
+function renderKpis(){
+  document.getElementById('kpiGrid').innerHTML = [
+    kpiCard('Total Applications','312','+18% vs last month',true),
+    kpiCard('Pending Review','47','Needs attention',false),
+    kpiCard('Approved','198','63.5% approval rate',true),
+    kpiCard('Avg. Loan Amount','₹4.1L','+6% vs last month',true),
+  ].join('');
+}
+function statusRow(a, forDashboard){
+  return `<tr class="row-hover" onclick="openApplication('${a.id}')">
+    <td><div class="font-medium">${a.name}</div><div class="text-xs" style="color:var(--text-dim)">#${a.id}</div></td>
+    <td class="mono">₹${a.amount.toLocaleString('en-IN')}</td>
+    <td class="mono">${a.credit}</td>
+    <td><span class="badge ${a.risk==='Low'?'b-green':a.risk==='Medium'?'b-amber':'b-red'}">${a.risk}</span></td>
+    <td class="mono">${a.eligibility}%</td>
+    <td><span class="badge ${STATUS_COLOR[a.status]}">${a.status}</span></td>
+    <td>${a.officer}</td>
+    <td style="color:var(--text-dim)">${a.date}</td>
+    <td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="openApplication('${a.id}')">Open</button></td>
+  </tr>`;
+}
+function tableHead(){
+  return `<thead><tr><th>Applicant</th><th>Loan Amount</th><th>Credit</th><th>Risk</th><th>Eligibility</th><th>Status</th><th>Officer</th><th>Date</th><th></th></tr></thead>`;
+}
+function renderRecentTable(){
+  document.getElementById('recentAppsTable').innerHTML = tableHead()+'<tbody>'+APPLICATIONS.slice(0,6).map(a=>statusRow(a)).join('')+'</tbody>';
+}
+let activeStatusFilter='All';
+function renderStatusChips(){
+  const chips=['All',...STATUSES];
+  document.getElementById('statusChips').innerHTML = chips.map(s=>`<span class="chip ${s===activeStatusFilter?'active':''}" onclick="activeStatusFilter='${s}';renderStatusChips();renderApplicationsTable()">${s}</span>`).join('');
+}
+function renderApplicationsTable(search=''){
+  let list = APPLICATIONS.filter(a=> (activeStatusFilter==='All'||a.status===activeStatusFilter) && a.name.toLowerCase().includes((search||'').toLowerCase()));
+  document.getElementById('applicationsTable').innerHTML = tableHead()+'<tbody>'+(list.length?list.map(a=>statusRow(a)).join(''):'<tr><td colspan="9" class="text-center py-10" style="color:var(--text-dim)">No applications match these filters — try clearing a filter above.</td></tr>')+'</tbody>';
+}
+
+/* ============================================================
+   APPLICATION DETAIL + AI ANALYSIS
+   ============================================================ */
+function openApplication(id){
+  const a = typeof id==='number' ? APPLICATIONS[id] : APPLICATIONS.find(x=>x.id===id);
+  if(!a) return;
+  go('appdetail');
+  document.getElementById('crumbCurrent').textContent = 'Application #'+a.id;
+  const emi = calcEmiRaw(a.amount, 11.5, a.tenure);
+  const factors = [
+    {t:`${a.years}-year employment tenure signals income stability`, positive:true},
+    {t:`Income-to-EMI ratio of ${(a.income/(emi.emi+a.emi||1)).toFixed(1)}x supports repayment capacity`, positive:a.income>emi.emi*2.5},
+    {t:`Credit score of ${a.credit} is ${a.credit>700?'well above':a.credit>600?'near':'below'} typical product thresholds`, positive:a.credit>650},
+    {t:`${a.dependents} dependent(s) factored into disposable income`, positive:a.dependents<=2},
+  ];
+  document.getElementById('view-appdetail').innerHTML = `
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost btn-sm" onclick="go('applications')">← Back</button>
+        <div><h1 class="display text-xl font-semibold">${a.name}</h1><p class="text-xs" style="color:var(--text-dim)">Application #${a.id} · Assigned to ${a.officer}</p></div>
+      </div>
+      <div class="flex gap-2">
+        <span class="badge ${STATUS_COLOR[a.status]}">${a.status}</span>
+        <button class="btn btn-ghost btn-sm" onclick="go('reports');renderReport('${a.id}')">Generate Report</button>
+        <button class="btn btn-primary btn-sm" onclick="toast('Status updated to Approved','success')">Approve</button>
+      </div>
+    </div>
+
+    <div class="flex gap-6 mb-5 border-b" style="border-color:var(--border)" id="appTabs">
+      ${['Overview','Financials','AI Analysis','Documents','Matching Products'].map((t,i)=>`<span class="tab-btn ${i===0?'active':''}" data-tab="${i}" onclick="switchAppTab(this,${i})">${t}</span>`).join('')}
+    </div>
+
+    <div id="appTabPanels">
+      <div class="apptab" data-p="0">
+        <div class="grid md:grid-cols-3 gap-4 mb-5">
+          <div class="card p-4"><div class="text-xs mb-2" style="color:var(--text-dim)">Eligibility Score</div><div class="text-3xl font-semibold mono" style="color:var(--indigo-500)">${a.eligibility}<span class="text-base">/100</span></div><div class="progress-bg mt-3"><div class="progress-bar" style="width:${a.eligibility}%;background:var(--indigo-500)"></div></div></div>
+          <div class="card p-4"><div class="text-xs mb-2" style="color:var(--text-dim)">Risk Level</div><span class="badge ${a.risk==='Low'?'b-green':a.risk==='Medium'?'b-amber':'b-red'}" style="font-size:14px;padding:6px 14px">${a.risk}</span></div>
+          <div class="card p-4"><div class="text-xs mb-2" style="color:var(--text-dim)">Requested Amount</div><div class="text-2xl font-semibold mono">₹${a.amount.toLocaleString('en-IN')}</div><div class="text-xs mt-1" style="color:var(--text-dim)">${a.tenure} months tenure</div></div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">Personal Information <span class="text-xs font-normal" style="color:var(--text-dim)">(sample data)</span></h4>
+            <div class="text-sm space-y-2">
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Full name</span><span>${a.name}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Employment</span><span>${a.employment}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Employment length</span><span>${a.years} years</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Dependents</span><span>${a.dependents}</span></div>
+            </div>
+          </div>
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">Application Timeline</h4>
+            <div class="text-sm space-y-3">
+              <div class="flex gap-3"><span style="color:var(--indigo-500)">●</span><div><div>Application submitted</div><div class="text-xs" style="color:var(--text-dim)">${a.date}</div></div></div>
+              <div class="flex gap-3"><span style="color:var(--indigo-500)">●</span><div><div>Documents uploaded</div><div class="text-xs" style="color:var(--text-dim)">${a.date}</div></div></div>
+              <div class="flex gap-3"><span style="color:var(--amber-500)">●</span><div><div>AI analysis in progress</div><div class="text-xs" style="color:var(--text-dim)">Current step</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="apptab hidden" data-p="1">
+        <div class="grid md:grid-cols-2 gap-4 mb-5">
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">Financial Profile</h4>
+            <div class="text-sm space-y-2">
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Monthly income</span><span class="mono">₹${a.income.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Monthly expenses</span><span class="mono">₹${a.expenses.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Existing EMI</span><span class="mono">₹${a.emi.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Savings</span><span class="mono">₹${a.savings.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Credit score</span><span class="mono">${a.credit}</span></div>
+            </div>
+          </div>
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">Embedded EMI Calculator</h4>
+            <div class="text-sm space-y-2 mb-3">
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Monthly EMI</span><span class="mono font-semibold">₹${emi.emi.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Total interest</span><span class="mono">₹${emi.totalInterest.toLocaleString('en-IN')}</span></div>
+              <div class="flex justify-between"><span style="color:var(--text-dim)">Total payment</span><span class="mono">₹${emi.totalPayment.toLocaleString('en-IN')}</span></div>
+            </div>
+            <button class="btn btn-ghost btn-sm w-full" onclick="go('emi')">Open full calculator →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="apptab hidden" data-p="2">
+        <div class="card p-4 mb-4" style="border-color:var(--indigo-500)">
+          <div class="flex items-start gap-3">
+            <span class="text-lg">🧠</span>
+            <div>
+              <div class="text-xs font-semibold mb-2" style="color:var(--indigo-400)">AI EXPLANATION · DECISION SUPPORT ONLY</div>
+              <p class="text-sm" style="color:var(--text-dim)">This assessment assists your review — it does not represent a final lending decision or a guarantee of approval.</p>
+            </div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">✅ Why this application qualifies</h4>
+            <ul class="text-sm space-y-2" style="color:var(--text-dim)">
+              ${factors.filter(f=>f.positive).map(f=>`<li>• ${f.t}</li>`).join('') || '<li>No strongly positive factors identified.</li>'}
+            </ul>
+          </div>
+          <div class="card p-4">
+            <h4 class="font-semibold text-sm mb-3">⚠️ Potential risk factors</h4>
+            <ul class="text-sm space-y-2" style="color:var(--text-dim)">
+              ${factors.filter(f=>!f.positive).map(f=>`<li>• ${f.t}</li>`).join('') || '<li>No major risk factors identified.</li>'}
+            </ul>
+          </div>
+        </div>
+        <div class="card p-4 mt-4">
+          <h4 class="font-semibold text-sm mb-2">➜ Recommended next action</h4>
+          <p class="text-sm" style="color:var(--text-dim)">${a.risk==='High'?'Request additional income documentation and route to senior officer review before proceeding.':a.risk==='Medium'?'Proceed to manual review — verify bank statement consistency before final decision.':'Eligible for standard fast-track review under current lending policy.'}</p>
+        </div>
+      </div>
+
+      <div class="apptab hidden" data-p="3">
+        <div class="grid md:grid-cols-2 gap-4">
+          ${['Aadhaar / ID document','Income proof','Bank statement','Employment proof'].map((d,i)=>`
+          <div class="card p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><span class="text-xl">📄</span><div><div class="text-sm font-medium">${d}</div><div class="text-xs" style="color:var(--text-dim)">Extracted · Confidence ${88-i*4}%</div></div></div>
+            <span class="badge ${i===3?'b-amber':'b-green'}">${i===3?'Needs review':'Validated'}</span>
+          </div>`).join('')}
+        </div>
+        <div class="card p-4 mt-4">
+          <h4 class="font-semibold text-sm mb-2">Extraction notes</h4>
+          <p class="text-sm" style="color:var(--text-dim)">Employment proof shows a company name that doesn't exactly match the application form — flagged for manual correction. Click a document to review and correct extracted fields (demo).</p>
+        </div>
+      </div>
+
+      <div class="apptab hidden" data-p="4">
+        <div class="space-y-3">
+          ${PRODUCTS.map(p=>{
+            const match = a.credit>=p.minCredit && a.income>=p.minIncome && a.amount<=p.maxAmount;
+            return `<div class="card p-4 flex items-center justify-between flex-wrap gap-3">
+              <div><div class="font-medium text-sm">${p.name}</div><div class="text-xs" style="color:var(--text-dim)">${p.rate}% p.a. · up to ₹${p.maxAmount.toLocaleString('en-IN')} · min credit ${p.minCredit}</div></div>
+              <span class="badge ${match?'b-green':'b-red'}">${match?'Eligible':'Missing requirements'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function switchAppTab(el, i){
+  document.querySelectorAll('#appTabs .tab-btn').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.apptab').forEach(p=>p.classList.add('hidden'));
+  document.querySelector(`.apptab[data-p="${i}"]`).classList.remove('hidden');
+}
+
+/* ============================================================
+   EMI CALCULATOR
+   ============================================================ */
+function calcEmiRaw(P, annualRate, n){
+  const r = annualRate/12/100;
+  const emi = r===0 ? P/n : (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  const totalPayment = emi*n;
+  const totalInterest = totalPayment-P;
+  return {emi:Math.round(emi), totalInterest:Math.round(totalInterest), totalPayment:Math.round(totalPayment), r, n, P};
+}
+function calcEmi(){
+  const P=+document.getElementById('emiAmount').value||0;
+  const rate=+document.getElementById('emiRate').value||0;
+  const n=+document.getElementById('emiTenure').value||1;
+  const res=calcEmiRaw(P,rate,n);
+  document.getElementById('emiOut').textContent='₹'+res.emi.toLocaleString('en-IN');
+  document.getElementById('emiInterestOut').textContent='₹'+res.totalInterest.toLocaleString('en-IN');
+  document.getElementById('emiTotalOut').textContent='₹'+res.totalPayment.toLocaleString('en-IN');
+  let bal=P, rows='';
+  for(let m=1;m<=Math.min(12,n);m++){
+    const interest=bal*res.r, principal=res.emi-interest; bal-=principal;
+    rows+=`<tr><td>${m}</td><td class="mono">₹${Math.round(principal).toLocaleString('en-IN')}</td><td class="mono">₹${Math.round(interest).toLocaleString('en-IN')}</td><td class="mono">₹${Math.max(0,Math.round(bal)).toLocaleString('en-IN')}</td></tr>`;
+  }
+  document.getElementById('amortTable').innerHTML = `<thead><tr><th>Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* ============================================================
+   LOAN PRODUCTS
+   ============================================================ */
+function renderProducts(){
+  document.getElementById('productsGrid').innerHTML = PRODUCTS.map(p=>`
+    <div class="card p-5">
+      <div class="flex justify-between items-start mb-3"><h3 class="font-semibold">${p.name}</h3><span class="badge b-indigo">${p.active} active</span></div>
+      <div class="text-2xl font-semibold mono mb-3">${p.rate}<span class="text-sm font-normal" style="color:var(--text-dim)">% p.a.</span></div>
+      <div class="text-sm space-y-1.5" style="color:var(--text-dim)">
+        <div class="flex justify-between"><span>Min. credit score</span><span>${p.minCredit}</span></div>
+        <div class="flex justify-between"><span>Min. monthly income</span><span>₹${p.minIncome.toLocaleString('en-IN')}</span></div>
+        <div class="flex justify-between"><span>Max. amount</span><span>₹${p.maxAmount.toLocaleString('en-IN')}</span></div>
+        <div class="flex justify-between"><span>Max. tenure</span><span>${p.maxTenure} mo</span></div>
+      </div>
+      <button class="btn btn-ghost btn-sm w-full mt-4" onclick="toast('Editing ${p.name} (demo)')">Edit product</button>
+    </div>`).join('');
+}
+
+/* ============================================================
+   ANALYTICS
+   ============================================================ */
+function renderAnalytics(){
+  document.getElementById('analyticsKpis').innerHTML = [
+    kpiCard('Avg. Processing Time','2.4 days','-0.6d vs last month',true),
+    kpiCard('Avg. Credit Score','642','+11 vs last month',true),
+    kpiCard('Approval Rate','63.5%','+2.1pt vs last month',true),
+    kpiCard('Avg. Loan Amount','₹4.1L','+6% vs last month',true),
+  ].join('');
+  const ranges=['7 days','30 days','90 days','12 months','Custom'];
+  let active='30 days';
+  document.getElementById('dateFilters').innerHTML = ranges.map(r=>`<span class="chip ${r===active?'active':''}" onclick="document.querySelectorAll('#dateFilters .chip').forEach(c=>c.classList.remove('active'));this.classList.add('active')">${r}</span>`).join('');
+  buildAnalyticsCharts();
+}
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+function renderReport(id){
+  id = id || APPLICATIONS[0].id;
+  const a = APPLICATIONS.find(x=>x.id===id) || APPLICATIONS[0];
+  const emi = calcEmiRaw(a.amount, 11.5, a.tenure);
+  document.getElementById('view-reports').innerHTML = `
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div><h1 class="display text-2xl font-semibold">Reports</h1><p class="text-sm" style="color:var(--text-dim)">Generated report preview for #${a.id}</p></div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm" onclick="toast('Secure share link copied (demo)','success')">Share securely</button>
+        <button class="btn btn-primary btn-sm" onclick="toast('PDF download started (demo)','success')">Download PDF</button>
+      </div>
+    </div>
+    <div class="card p-8 max-w-3xl mx-auto" style="background:var(--surface)">
+      <div class="flex justify-between items-start mb-6 pb-6" style="border-bottom:1px solid var(--border)">
+        <div><h2 class="display text-lg font-semibold">Loan Application Report</h2><p class="text-xs" style="color:var(--text-dim)">Rajguru Lending Pvt Ltd · Application #${a.id}</p></div>
+        <span class="badge ${STATUS_COLOR[a.status]}">${a.status}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-6 mb-6 text-sm">
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">APPLICANT SUMMARY</div><div>${a.name}</div><div style="color:var(--text-dim)">${a.employment} · ${a.years} yrs experience</div></div>
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">REQUESTED LOAN</div><div class="mono">₹${a.amount.toLocaleString('en-IN')} · ${a.tenure} months</div></div>
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">FINANCIAL PROFILE</div><div style="color:var(--text-dim)">Income ₹${a.income.toLocaleString('en-IN')}/mo · Expenses ₹${a.expenses.toLocaleString('en-IN')}/mo</div></div>
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">CREDIT INFORMATION</div><div class="mono">${a.credit}</div></div>
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">ELIGIBILITY ANALYSIS</div><div>${a.eligibility}/100 score</div></div>
+        <div><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">RISK ANALYSIS</div><span class="badge ${a.risk==='Low'?'b-green':a.risk==='Medium'?'b-amber':'b-red'}">${a.risk}</span></div>
+      </div>
+      <div class="mb-6"><div class="text-xs font-semibold mb-2" style="color:var(--text-dim)">EMI CALCULATION</div>
+        <div class="grid grid-cols-3 text-sm gap-3"><div>EMI: <span class="mono font-medium">₹${emi.emi.toLocaleString('en-IN')}</span></div><div>Interest: <span class="mono font-medium">₹${emi.totalInterest.toLocaleString('en-IN')}</span></div><div>Total: <span class="mono font-medium">₹${emi.totalPayment.toLocaleString('en-IN')}</span></div></div>
+      </div>
+      <div class="text-xs" style="color:var(--text-dim);border-top:1px solid var(--border);padding-top:14px">This report reflects AI-assisted, decision-support analysis generated on sample data and does not constitute a final lending decision.</div>
+    </div>`;
+}
+
+/* ============================================================
+   TEAM / AUDIT / BILLING / SETTINGS / FAQ
+   ============================================================ */
+function renderTeam(){
+  const roles=["Owner","Admin","Loan Officer","Loan Officer","Analyst","Viewer"];
+  const people=[["Siri","siri@rajlending.in"],["Priya Sharma","priya@rajlending.in"],["Rahul Mehta","rahul@rajlending.in"],["Ananya Rao","ananya@rajlending.in"],["Karan Joshi","karan@rajlending.in"],["Meena Iyer","meena@rajlending.in"]];
+  document.getElementById('teamTable').innerHTML = `<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>${
+    people.map((p,i)=>`<tr><td>${p[0]}</td><td style="color:var(--text-dim)">${p[1]}</td><td><span class="badge b-indigo">${roles[i]}</span></td><td><span class="badge b-green">Active</span></td><td><button class="btn btn-ghost btn-sm" onclick="toast('Permissions updated (demo)')">Manage</button></td></tr>`).join('')
+  }</tbody>`;
+}
+function renderAudit(){
+  const actions=[["Login","Siri"],["Application created","Priya Sharma"],["Document uploaded","Rahul Mehta"],["AI analysis run","System"],["Application status changed → Approved","Priya Sharma"],["Loan product updated","Siri"],["User role changed","Siri"],["Report generated","Ananya Rao"]];
+  document.getElementById('auditTable').innerHTML = `<thead><tr><th>Timestamp</th><th>User</th><th>Action</th></tr></thead><tbody>${
+    actions.map((a,i)=>`<tr><td style="color:var(--text-dim)" class="mono">${new Date(Date.now()-i*3600*1000*7).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}</td><td>${a[1]}</td><td>${a[0]}</td></tr>`).join('')
+  }</tbody>`;
+}
+function renderBilling(){
+  const plans=[["Starter","₹2,999"],["Business","₹7,999"],["Professional","₹14,999"],["Enterprise","Custom"]];
+  document.getElementById('billingPlans').innerHTML = plans.map(p=>`<div class="card p-4" style="${p[0]==='Business'?'border-color:var(--indigo-500)':''}"><div class="font-semibold text-sm mb-1">${p[0]}</div><div class="text-lg font-semibold mono mb-2">${p[1]}${p[1]!=='Custom'?'<span class="text-xs font-normal" style="color:var(--text-dim)">/mo</span>':''}</div><button class="btn ${p[0]==='Business'?'btn-primary':'btn-ghost'} btn-sm w-full">${p[0]==='Business'?'Current plan':'Switch'}</button></div>`).join('');
+  const hist=[["1 Sep 2026","₹7,999","Paid"],["1 Aug 2026","₹7,999","Paid"],["1 Jul 2026","₹2,999","Paid"]];
+  document.getElementById('billingTable').innerHTML = `<thead><tr><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>${hist.map(h=>`<tr><td>${h[0]}</td><td class="mono">${h[1]}</td><td><span class="badge b-green">${h[2]}</span></td><td><button class="btn btn-ghost btn-sm">Download</button></td></tr>`).join('')}</tbody>`;
+}
+const SETTINGS_TABS=["Business Profile","Users & Roles","AI Settings","Notifications","Security","API Keys"];
+let activeSettingsTab=0;
+function renderSettings(){
+  document.getElementById('settingsTabs').innerHTML = SETTINGS_TABS.map((t,i)=>`<span class="tab-btn ${i===activeSettingsTab?'active':''}" onclick="activeSettingsTab=${i};renderSettings()">${t}</span>`).join('');
+  const c=document.getElementById('settingsContent');
+  const panels=[
+    `<label>Business name</label><input value="Rajguru Lending Pvt Ltd" class="mb-4"><label>Business type</label><select class="mb-4"><option>NBFC</option><option>Fintech Startup</option><option>Loan Agency</option><option>Independent Consultant</option></select><button class="btn btn-primary" onclick="toast('Profile saved','success')">Save changes</button>`,
+    `<p class="text-sm mb-4" style="color:var(--text-dim)">Roles: Owner, Admin, Loan Officer, Analyst, Viewer. Manage individual members from the Team page.</p><button class="btn btn-ghost" onclick="go('team')">Go to Team →</button>`,
+    `<label>AI explanation detail</label><select class="mb-4"><option>Standard</option><option>Detailed</option><option>Concise</option></select><label class="flex items-center gap-2 mb-4"><input type="checkbox" checked style="width:auto"> Require officer confirmation before AI-suggested status changes</label><button class="btn btn-primary" onclick="toast('AI settings saved','success')">Save changes</button>`,
+    `<label class="flex items-center gap-2 mb-3"><input type="checkbox" checked style="width:auto"> Email me on new application</label><label class="flex items-center gap-2 mb-3"><input type="checkbox" checked style="width:auto"> Email me on high-risk flag</label><label class="flex items-center gap-2 mb-4"><input type="checkbox" style="width:auto"> Weekly summary digest</label><button class="btn btn-primary" onclick="toast('Notification preferences saved','success')">Save changes</button>`,
+    `<label>Two-factor authentication</label><div class="flex items-center justify-between mb-4"><span class="text-sm" style="color:var(--text-dim)">Currently disabled</span><button class="btn btn-ghost btn-sm">Enable 2FA</button></div><label>Active sessions</label><p class="text-sm mb-4" style="color:var(--text-dim)">2 active sessions</p><button class="btn btn-ghost" style="color:#EF4444">Log out of all sessions</button>`,
+    `<label>Production API key</label><div class="flex gap-2 mb-4"><input value="lp_live_••••••••••••3f2a" readonly><button class="btn btn-ghost btn-sm">Copy</button></div><button class="btn btn-ghost" onclick="toast('New key generated (demo)')">Generate new key</button>`,
+  ];
+  c.innerHTML = panels[activeSettingsTab];
+}
+function renderFaq(){
+  const faqs=[
+    ["Is the AI making the final loan decision?","No. Every AI output is decision-support — eligibility scores and risk explanations assist your officers, who make the final call."],
+    ["Can each business see other businesses' data?","No. Data is isolated per organization using row-level security at the database layer."],
+    ["Can we bring our own loan products and rules?","Yes. Configure your own products, thresholds and eligibility rules — the matching engine compares applicants against your rules only."],
+    ["Is payment processing connected in this demo?","Not yet. Billing is structured so a provider like Stripe can be connected without UI changes."],
+  ];
+  document.getElementById('faqList').innerHTML = faqs.map((f,i)=>`
+    <div class="card p-4 cursor-pointer" onclick="this.querySelector('.faq-a').classList.toggle('hidden')">
+      <div class="flex justify-between items-center font-medium text-sm">${f[0]}<span>+</span></div>
+      <p class="faq-a hidden text-sm mt-2" style="color:var(--text-dim)">${f[1]}</p>
+    </div>`).join('');
+}
+
+/* ============================================================
+   AI ASSISTANT (mock RAG-style responses)
+   ============================================================ */
+function toggleAiPanel(){
+  const p=document.getElementById('aiPanel');
+  const showing = p.classList.contains('flex');
+  if(showing){p.classList.remove('flex');p.classList.add('hidden');}
+  else{p.classList.remove('hidden');p.classList.add('flex');
+    if(!p.dataset.init){
+      aiPush('assistant','Hi Siri! Ask me about applications, configured loan products, or lending policy. I can also explain risk factors for any application you have open.');
+      p.dataset.init='1';
+    }
+  }
+}
+function aiPush(role,text){
+  const host=document.getElementById('aiMessages');
+  const div=document.createElement('div');
+  div.className='fade-in text-sm p-3 rounded-xl max-w-[90%] '+(role==='user'?'ml-auto':'');
+  div.style.cssText = role==='user' ? 'background:var(--indigo-500);color:#fff' : 'background:var(--surface-2)';
+  div.textContent=text;
+  host.appendChild(div);
+  host.scrollTop=host.scrollHeight;
+}
+function askAi(preset){
+  const input=document.getElementById('aiInput');
+  const q = preset || input.value.trim();
+  if(!q) return;
+  aiPush('user', q);
+  if(!preset) input.value='';
+  setTimeout(()=>{
+    let resp = "Based on your configured products and this organization's sample data: ";
+    const lower=q.toLowerCase();
+    if(lower.includes('risk')) resp = "High-risk flags on this portfolio are most often driven by credit scores below 590 combined with an income-to-EMI ratio under 2x. Ask me about a specific application ID for its exact factors.";
+    else if(lower.includes('match') || lower.includes('product')) resp = "Quick Cash Advance has the loosest thresholds (min. credit 550, min. income ₹18,000) and matches the widest range of applicants. Business Loan requires min. income ₹40,000.";
+    else if(lower.includes('missing') || lower.includes('document')) resp = "Across current applications, Employment Proof is the most frequently flagged document — usually due to a company-name mismatch with the application form.";
+    else if(lower.includes('summar')) resp = "Open a specific application and I can summarize its financial profile, risk factors and recommended next action.";
+    else resp = "I can help with configured loan products, lending policy, applicant financials and application status. Try asking about a specific application ID, e.g. \"Summarize LP-2201\".";
+    aiPush('assistant', resp);
+  }, 550);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function renderAll(){
+  renderKpis(); renderRecentTable(); renderStatusChips(); renderApplicationsTable();
+  renderProducts(); renderAnalytics(); calcEmi(); renderReport(); renderTeam(); renderAudit(); renderBilling(); renderSettings();
+  buildCharts();
+  go('dashboard');
+}
+renderFaq();
+</script>
+</body>
+</html>
